@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -12,21 +11,20 @@ import (
 )
 
 func TestMainHandlerWhenGoodRequest(t *testing.T) {
-	URL := fmt.Sprintf("/cafe?count=%d&city=moscow", 4)
-	req := httptest.NewRequest("GET", URL, nil) // здесь нужно создать запрос к сервису
+	url := "/cafe?count=4&city=moscow"
+	req := httptest.NewRequest("GET", url, nil) // здесь нужно создать запрос к сервису
 
 	responseRecorder := httptest.NewRecorder()
 	handler := http.HandlerFunc(mainHandle)
 	handler.ServeHTTP(responseRecorder, req)
 
-	body := responseRecorder.Body.String()
-	require.NotEmpty(t, body)
 	require.Equal(t, responseRecorder.Code, http.StatusOK)
+	assert.NotEmpty(t, responseRecorder.Body)
 }
 
 func TestMainHandlerWhenWrongCity(t *testing.T) {
-	URL := fmt.Sprintf("/cafe?count=%d&city=spb", 4)
-	req := httptest.NewRequest("GET", URL, nil) // здесь нужно создать запрос к сервису
+	url := "/cafe?count=4&city=spb"
+	req := httptest.NewRequest("GET", url, nil) // здесь нужно создать запрос к сервису
 
 	responseRecorder := httptest.NewRecorder()
 	handler := http.HandlerFunc(mainHandle)
@@ -35,18 +33,19 @@ func TestMainHandlerWhenWrongCity(t *testing.T) {
 	body := responseRecorder.Body.String()
 
 	expected := "wrong city value"
+	require.Equal(t, responseRecorder.Code, http.StatusBadRequest)
 	assert.Equal(t, body, expected)
-	assert.Equal(t, responseRecorder.Code, http.StatusBadRequest)
 }
 
 func TestMainHandlerWhenCountMoreThanTotal(t *testing.T) {
 	totalCount := 4
-	URL := fmt.Sprintf("/cafe?count=%d&city=moscow", 5)
-	req := httptest.NewRequest("GET", URL, nil) // здесь нужно создать запрос к сервису
+	url := "/cafe?count=5&city=moscow"
+	req := httptest.NewRequest("GET", url, nil) // здесь нужно создать запрос к сервису
 
 	responseRecorder := httptest.NewRecorder()
 	handler := http.HandlerFunc(mainHandle)
 	handler.ServeHTTP(responseRecorder, req)
+	require.Equal(t, responseRecorder.Code, http.StatusOK)
 
 	body := responseRecorder.Body.String()
 	list := strings.Split(body, ",")
